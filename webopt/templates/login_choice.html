@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAUDRONIX GT — Acceso</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/bear.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --p:   #a855f7;
+            --p2:  #c084fc;
+            --c:   #06b6d4;
+            --c2:  #22d3ee;
+            --pk:  #ec4899;
+            --pk2: #f472b6;
+            --gold:#fbbf24;
+            --bg:  #04060f;
+            --card-bg: rgba(5, 2, 18, 0.82);
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            font-family: 'Inter', sans-serif;
+            background: #02010a;
+        }
+        body { overflow-x: hidden; overflow-y: auto; }
+
+        /* ── BG IMAGE (when uploaded from admin) ── */
+        .bg-image-layer {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            /* iOS Safari fix */
+            -webkit-transform: translate3d(0,0,0);
+            transform: translate3d(0,0,0);
+            will-change: transform;
+        }
+
+        /* ── CANVAS STARS / COMETS ── */
+        #cosmos { position: fixed; inset: 0; z-index: 1; }
+
+        /* ── OVERLAY GRADIENT ── */
+        .overlay {
+            position: fixed; inset: 0; z-index: 2; pointer-events: none;
+            {% if background_url %}
+            background:
+                radial-gradient(ellipse 80% 70% at 15% 20%,  rgba(88,28,220,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 60% at 88% 10%,  rgba(190,24,93,0.15)  0%, transparent 55%),
+                radial-gradient(ellipse 75% 65% at 85% 92%,  rgba(8,145,178,0.12)  0%, transparent 55%),
+                radial-gradient(ellipse 55% 50% at 5%  90%,  rgba(109,40,217,0.14) 0%, transparent 55%);
+            {% else %}
+            background:
+                radial-gradient(ellipse 80% 70% at 15% 20%,  rgba(88,28,220,0.45) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 60% at 88% 10%,  rgba(190,24,93,0.40)  0%, transparent 55%),
+                radial-gradient(ellipse 75% 65% at 85% 92%,  rgba(8,145,178,0.35)  0%, transparent 55%),
+                radial-gradient(ellipse 55% 50% at 5%  90%,  rgba(109,40,217,0.35) 0%, transparent 55%);
+            {% endif %}
+        }
+
+        /* ── SCENE WRAPPER ── */
+        .scene {
+            position: relative; z-index: 5;
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 0;
+            padding: 30px 16px 30px;
+        }
+
+        /* ── WELCOME BLOCK ── */
+        .welcome-block {
+            text-align: center;
+            margin-bottom: 28px;
+            animation: heroEntry 1.1s cubic-bezier(0.22,1,0.36,1) both;
+            background: rgba(0,0,0,0.35);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border-radius: 18px;
+            padding: 18px 26px 16px;
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        @keyframes heroEntry {
+            from { opacity:0; transform:translateY(-28px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        .welcome-eyebrow {
+            font-size: 0.62rem;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: rgba(220,170,255,0.95);
+            font-family: 'Orbitron', monospace;
+            margin-bottom: 10px;
+            text-shadow: 0 1px 8px rgba(0,0,0,0.9);
+        }
+
+        .welcome-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.5rem, 4vw, 2.4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0abfc 30%, #818cf8 55%, #67e8f9 80%, #f0abfc 100%);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleShimmer 5s linear infinite;
+            filter: drop-shadow(0 2px 12px rgba(0,0,0,1)) drop-shadow(0 0 6px rgba(0,0,0,0.9));
+        }
+        @keyframes titleShimmer { from{background-position:0% center;} to{background-position:300% center;} }
+
+        .welcome-sub {
+            margin-top: 10px;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.80);
+            letter-spacing: 1.5px;
+            font-weight: 300;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+        }
+        .welcome-sub span {
+            color: rgba(220,170,255,0.95);
+            font-weight: 500;
+        }
+
+        /* ── DIVIDER ── */
+        .welcome-divider {
+            margin: 14px auto 0;
+            width: 80px; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--pk), var(--p), var(--c2), transparent);
+            border-radius: 2px;
+            animation: divPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes divPulse { 0%,100%{opacity:0.5;transform:scaleX(0.6);} 50%{opacity:1;transform:scaleX(1);} }
+
+        /* ── BEAR ── */
+        .bear-wrap {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            animation: cardEntry 1s cubic-bezier(0.22,1,0.36,1) 0.1s both;
+        }
+        .bear-glow-line {
+            width: 130px; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--p), var(--c), transparent);
+            border-radius: 2px; opacity: 0.55;
+            animation: lineGlow 2.8s ease-in-out infinite;
+        }
+        @keyframes lineGlow { 0%,100%{opacity:0.25;} 50%{opacity:0.7;} }
+        @media (max-width: 680px) { .bear-wrap { display: none; } }
+
+        /* ── CARD WRAPPER ── */
+        .card-wrapper {
+            position: relative;
+            animation: cardEntry 1s cubic-bezier(0.22,1,0.36,1) 0.2s both;
+        }
+        @keyframes cardEntry {
+            from { opacity:0; transform:translateY(32px) scale(0.95); }
+            to   { opacity:1; transform:translateY(0) scale(1); }
+        }
+
+        /* Ambient glow behind card */
+        .card-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: -30px;
+            background:
+                radial-gradient(ellipse at 30% 30%, rgba(168,85,247,0.25) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 70%, rgba(6,182,212,0.20)  0%, transparent 60%);
+            filter: blur(20px);
+            z-index: -1;
+            border-radius: 50%;
+            animation: ambientPulse 4s ease-in-out infinite alternate;
+        }
+        @keyframes ambientPulse { from{opacity:0.6;} to{opacity:1;} }
+
+        /* ── LOGIN CARD ── */
+        .login-card {
+            width: 390px;
+            background: var(--card-bg);
+            backdrop-filter: blur(40px) saturate(1.5);
+            -webkit-backdrop-filter: blur(40px) saturate(1.5);
+            border-radius: 26px;
+            border: 1px solid rgba(168,85,247,0.22);
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.04),
+                0 40px 100px rgba(0,0,0,0.8),
+                0 0 80px rgba(168,85,247,0.10),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+            overflow: hidden;
+            padding: 0 0 30px;
+            position: relative;
+        }
+
+        /* Top gradient bar */
+        .card-topbar {
+            height: 3px;
+            background: linear-gradient(90deg, var(--p), var(--pk), var(--c2), var(--p2), var(--pk));
+            background-size: 200% auto;
+            animation: barFlow 3s linear infinite;
+        }
+        @keyframes barFlow { from{background-position:0% center;} to{background-position:200% center;} }
+
+        /* Scan line */
+        .scan-line {
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            animation: scan 4s linear infinite;
+        }
+        @keyframes scan { from{transform:translateX(-100%);} to{transform:translateX(200%);} }
+
+        .corner {
+            position: absolute; width: 18px; height: 18px;
+            border-color: var(--pk); border-style: solid; opacity: 0.45;
+        }
+        .corner-tl { top:8px;left:8px;border-width:2px 0 0 2px;border-radius:4px 0 0 0; }
+        .corner-tr { top:8px;right:8px;border-width:2px 2px 0 0;border-radius:0 4px 0 0; }
+        .corner-bl { bottom:8px;left:8px;border-width:0 0 2px 2px;border-radius:0 0 0 4px; }
+        .corner-br { bottom:8px;right:8px;border-width:0 2px 2px 0;border-radius:0 0 4px 0; }
+
+        /* ── CARD HEADER ── */
+        .card-header { text-align: center; padding: 28px 28px 12px; }
+
+        .brand {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.35rem; font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg, #fff, var(--pk2), var(--p2), var(--c2), var(--pk2), #fff);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s linear infinite;
+        }
+        @keyframes shimmer { from{background-position:0% center;} to{background-position:300% center;} }
+
+        .brand-sub {
+            color: rgba(255,255,255,0.25); font-size: 0.65rem;
+            letter-spacing: 4px; text-transform: uppercase; margin-top: 4px;
+        }
+
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, rgba(236,72,153,0.10), rgba(168,85,247,0.10));
+            border: 1px solid rgba(236,72,153,0.25);
+            border-radius: 20px; padding: 4px 12px;
+            font-size: 0.60rem; color: var(--pk2);
+            letter-spacing: 2.5px; margin-top: 11px;
+        }
+        .dot-blink {
+            width: 6px; height: 6px; background: var(--pk); border-radius: 50%;
+            animation: blink 1.2s ease-in-out infinite;
+            box-shadow: 0 0 8px var(--pk);
+        }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+        /* ── TABS ── */
+        .tabs {
+            display: flex; margin: 10px 24px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px; padding: 4px; gap: 4px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .tab {
+            flex: 1; padding: 9px; text-align: center;
+            cursor: pointer; font-weight: 700; font-size: 0.72rem;
+            letter-spacing: 2.5px; color: rgba(255,255,255,0.28);
+            border-radius: 8px; transition: all 0.3s; user-select: none;
+            font-family: 'Orbitron', monospace;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, rgba(236,72,153,0.20), rgba(168,85,247,0.18), rgba(6,182,212,0.08));
+            color: var(--pk2);
+            box-shadow: 0 0 20px rgba(236,72,153,0.18), 0 0 10px rgba(168,85,247,0.12);
+            border: 1px solid rgba(236,72,153,0.25);
+        }
+        .tab:hover:not(.active) { color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.05); }
+
+        /* ── FORM ── */
+        .form-wrap { padding: 18px 24px 0; }
+        .form-container { display: none; animation: fadeSlide 0.38s ease; }
+        .form-container.active { display: block; }
+        @keyframes fadeSlide { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+
+        .form-title {
+            font-family: 'Orbitron', monospace; font-size: 0.80rem;
+            font-weight: 700; letter-spacing: 3px; text-align: center;
+            margin-bottom: 16px; margin-top: 16px; color: var(--p2);
+        }
+        #admin-form .form-title { color: var(--gold); }
+
+        .input-group { position: relative; margin-bottom: 12px; }
+        .input-group input {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            color: #fff; padding: 12px 16px 12px 42px;
+            border-radius: 10px; font-size: 0.90rem;
+            font-family: 'Inter', sans-serif; outline: none; transition: all 0.3s;
+        }
+        .input-group input::placeholder { color: rgba(255,255,255,0.20); }
+        .input-group input:focus {
+            border-color: rgba(139,92,246,0.45);
+            background: rgba(139,92,246,0.05);
+            box-shadow: 0 0 20px rgba(139,92,246,0.10);
+        }
+        #admin-form .input-group input:focus {
+            border-color: rgba(251,191,36,0.35);
+            background: rgba(251,191,36,0.04);
+            box-shadow: 0 0 18px rgba(251,191,36,0.08);
+        }
+        .input-icon {
+            position: absolute; left: 13px; top: 50%;
+            transform: translateY(-50%); font-size: 14px;
+            opacity: 0.32; pointer-events: none;
+        }
+
+        .btn {
+            width: 100%; padding: 13px; border: none;
+            border-radius: 10px; font-weight: 900; font-size: 0.80rem;
+            letter-spacing: 3px; cursor: pointer; margin-top: 4px;
+            transition: all 0.3s; font-family: 'Orbitron', monospace;
+            position: relative; overflow: hidden;
+        }
+        .btn::before {
+            content:''; position:absolute; top:0; left:-100%;
+            width:100%; height:100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before { left:100%; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:active { transform: scale(0.98); }
+
+        .btn-user {
+            background: linear-gradient(135deg, #6d28d9, var(--p), var(--pk), var(--pk2));
+            background-size: 200% auto;
+            color: #fff;
+            box-shadow: 0 6px 28px rgba(168,85,247,0.40), 0 0 0 1px rgba(236,72,153,0.18);
+            animation: btnFlow 4s linear infinite;
+        }
+        @keyframes btnFlow { from{background-position:0%center;} to{background-position:200%center;} }
+        .btn-user:hover { box-shadow: 0 10px 40px rgba(236,72,153,0.55); }
+
+        .btn-admin {
+            background: linear-gradient(135deg, #92400e, var(--gold), #fde68a);
+            color: #0a0a0a;
+            box-shadow: 0 6px 28px rgba(251,191,36,0.35);
+        }
+        .btn-admin:hover { box-shadow: 0 10px 40px rgba(251,191,36,0.55); }
+
+        .error-msg {
+            background: rgba(239,68,68,0.09);
+            border: 1px solid rgba(239,68,68,0.22);
+            color: #fca5a5; padding: 9px 13px;
+            border-radius: 9px; font-size: 0.78rem;
+            margin-bottom: 13px; text-align: center;
+            animation: shake 0.4s ease;
+        }
+        @keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-4px);} 40%{transform:translateX(4px);} 60%{transform:translateX(-2px);} 80%{transform:translateX(2px);} }
+
+        .footer-note {
+            text-align: center; color: rgba(255,255,255,0.09);
+            font-size: 0.60rem; letter-spacing: 3px;
+            margin-top: 18px; text-transform: uppercase;
+        }
+
+        /* ── MOBILE ── */
+        @media (max-width: 600px) {
+            /* Background image: show complete (no crop) on mobile */
+            .bg-image-layer {
+                position: fixed; width: 100vw; height: 100vh;
+                background-size: contain;
+                background-position: center top;
+                background-color: #02010a;
+                -webkit-transform: translate3d(0,0,0);
+                transform: translate3d(0,0,0);
+            }
+
+            .scene {
+                justify-content: flex-start;
+                padding: 20px 12px 28px;
+                min-height: 100svh;
+            }
+
+            /* Welcome text — más pequeño para que quepa */
+            .welcome-eyebrow { font-size: 0.52rem; letter-spacing: 3px; margin-bottom: 6px; }
+            .welcome-title   { font-size: clamp(1.2rem, 7vw, 1.55rem); letter-spacing: 2px; }
+            .welcome-sub     { font-size: 0.72rem; letter-spacing: 0.8px; margin-top: 6px; }
+            .welcome-divider { margin-top: 10px; }
+            .welcome-block   { margin-bottom: 16px; }
+
+            /* Card */
+            .login-card {
+                width: calc(100vw - 24px);
+                border-radius: 20px;
+                padding-bottom: 20px;
+            }
+            .card-header { padding: 18px 18px 8px; }
+            .brand       { font-size: 1.1rem; letter-spacing: 3px; }
+            .brand-sub   { font-size: 0.58rem; letter-spacing: 3px; }
+            .status-pill { font-size: 0.55rem; padding: 3px 10px; margin-top: 8px; }
+
+            /* Form */
+            .form-wrap   { padding: 10px 16px 0; }
+            .form-title  { font-size: 0.72rem; letter-spacing: 2px; margin: 10px 0 10px; }
+            .input-group { margin-bottom: 10px; }
+            .input-group input { padding: 11px 12px 11px 38px; font-size: 0.85rem; }
+            .btn { padding: 12px; font-size: 0.72rem; letter-spacing: 2px; }
+            .footer-note { font-size: 0.55rem; margin-top: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BACKGROUND IMAGE/VIDEO (from admin upload) -->
+    {% if background_url %}
+        {% if background_url.lower().endswith(('.mp4','.webm','.mov')) %}
+        <video autoplay muted loop playsinline style="position:fixed;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.75);">
+            <source src="{{ background_url }}" type="video/{{ background_url.split('.')[-1] }}">
+        </video>
+        {% else %}
+        <div class="bg-image-layer" style="background-image:url('{{ background_url }}'); background-position: {{ background_position | default('center center') }};"></div>
+        {% endif %}
+    {% endif %}
+
+    <!-- STARFIELD / COMETS CANVAS -->
+    <canvas id="cosmos"></canvas>
+
+    <!-- COLOR OVERLAY -->
+    <div class="overlay"></div>
+
+    <!-- FULL SCENE -->
+    <div class="scene">
+
+        <!-- WELCOME TEXT -->
+        <div class="welcome-block">
+            <div class="welcome-eyebrow">✦ Sistema de Monitoreo OTP ✦</div>
+            <div class="welcome-title">BIENVENIDO AL<br>SISTEMA</div>
+            <div class="welcome-sub">Acceso seguro · Tiempo real · <span>24/7 activo</span></div>
+            <div class="welcome-divider"></div>
+        </div>
+
+        <!-- BEAR ABOVE CARD -->
+        <div class="bear-wrap">
+            <div id="bear-above-card"></div>
+            <div class="bear-glow-line"></div>
+        </div>
+
+        <!-- CARD -->
+        <div class="card-wrapper">
+            <div class="login-card">
+                <div class="card-topbar"></div>
+                <div class="scan-line"></div>
+                <div class="corner corner-tl"></div>
+                <div class="corner corner-tr"></div>
+                <div class="corner corner-bl"></div>
+                <div class="corner corner-br"></div>
+
+                <div class="card-header">
+                    <div class="brand">PAUDRONIX GT</div>
+                    <div class="brand-sub">Sistema de OTP</div>
+                    <div class="status-pill">
+                        <div class="dot-blink"></div>
+                        SISTEMA ACTIVO
+                    </div>
+                </div>
+
+                <div class="form-wrap">
+                    {% if error %}
+                    <div class="error-msg" style="margin-top:12px">⚠ {{ error }}</div>
+                    {% endif %}
+
+                    {% if admin_page %}
+                    <div class="form-container active">
+                        <div class="form-title">INGRESO ADMIN</div>
+                        <form action="/paudronix" method="POST">
+                            <div class="input-group">
+                                <span class="input-icon">👤</span>
+                                <input type="text" name="username" placeholder="Usuario" required autocomplete="username">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-icon">🔒</span>
+                                <input type="password" name="password" placeholder="Contraseña" required autocomplete="current-password">
+                            </div>
+                            <button type="submit" class="btn btn-admin">ACCEDER</button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="form-container active">
+                        <div class="form-title">INGRESO USUARIO</div>
+                        <form action="/user_login" method="POST">
+                            <div class="input-group">
+                                <span class="input-icon">👤</span>
+                                <input type="text" name="username" placeholder="Usuario" required autocomplete="username">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-icon">🔒</span>
+                                <input type="password" name="password" placeholder="Contraseña" required autocomplete="current-password">
+                            </div>
+                            <button type="submit" class="btn btn-user">ENTRAR</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <div class="footer-note">OTP Monitor &nbsp;•&nbsp; Acceso Seguro</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/static/bear.js"></script>
+    <script>
+    function showForm(type, el) {
+        document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(type + '-form').classList.add('active');
+        el.classList.add('active');
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'admin') showForm('admin', document.getElementById('tab-admin'));
+    {% if tab == 'admin' %}
+    showForm('admin', document.getElementById('tab-admin'));
+    {% endif %}
+
+    /* ─── COSMOS: Stars + Comets ─── */
+    (function() {
+        try {
+            const c = document.getElementById('cosmos');
+            if (!c) return;
+            const ctx = c.getContext('2d');
+            if (!ctx) return;
+            let W = 1, H = 1;
+
+            function resize() {
+                W = c.width  = window.innerWidth  || document.documentElement.clientWidth  || 800;
+                H = c.height = window.innerHeight || document.documentElement.clientHeight || 600;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const COLORS = ['#c084fc','#f472b6','#22d3ee','#818cf8','#ffffff'];
+
+            /* Stars */
+            const STAR_COUNT = 220;
+            const stars = Array.from({length: STAR_COUNT}, () => ({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                r: Math.random() * 1.4 + 0.3,
+                a: Math.random(),
+                speed: Math.random() * 0.008 + 0.003,
+                phase: Math.random() * Math.PI * 2,
+            }));
+
+            /* Comets */
+            const COMET_COUNT = 6;
+            function makeComet() {
+                const angle = (Math.random() * 30 - 15) * Math.PI / 180;
+                const speed = Math.random() * 5 + 4;
+                return {
+                    x: -200,
+                    y: Math.random() * H * 0.6,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed + 0.5,
+                    tail: Math.random() * 180 + 120,
+                    alpha: 0,
+                    fadeIn: true,
+                    width: Math.random() * 1.2 + 0.5,
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                    delay: Math.random() * 180,
+                };
+            }
+            const comets = Array.from({length: COMET_COUNT}, makeComet);
+
+            function draw() {
+                try {
+                    ctx.clearRect(0, 0, W, H);
+
+                    /* Stars */
+                    stars.forEach(s => {
+                        s.phase += s.speed;
+                        const a = Math.max(0, Math.min(1, (Math.sin(s.phase) * 0.4 + 0.6) * s.a));
+                        ctx.beginPath();
+                        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,255,${a.toFixed(2)})`;
+                        ctx.fill();
+                    });
+
+                    /* Comets */
+                    comets.forEach((cm, i) => {
+                        if (cm.delay > 0) { cm.delay--; return; }
+                        cm.x += cm.vx;
+                        cm.y += cm.vy;
+                        if (cm.fadeIn) {
+                            cm.alpha = Math.min(cm.alpha + 0.04, 0.9);
+                            if (cm.alpha >= 0.9) cm.fadeIn = false;
+                        }
+                        // Safe fade near right edge — guard against W=0
+                        const fadeZone = W > 0 ? W * 0.25 : 1;
+                        const nearEdge = fadeZone > 0 ? Math.max(0, Math.min(1, (cm.x - W * 0.75) / fadeZone)) : 0;
+                        const alpha = Math.max(0, cm.alpha * (1 - nearEdge));
+
+                        const tx = cm.x - cm.tail * 0.7;
+                        const ty = cm.y - cm.vy * 14;
+
+                        ctx.save();
+                        ctx.globalAlpha = alpha;
+                        // Tail
+                        const g = ctx.createLinearGradient(cm.x, cm.y, tx, ty);
+                        g.addColorStop(0, cm.color);
+                        g.addColorStop(1, 'rgba(0,0,0,0)');
+                        ctx.beginPath();
+                        ctx.moveTo(cm.x, cm.y);
+                        ctx.lineTo(tx, ty);
+                        ctx.strokeStyle = g;
+                        ctx.lineWidth = cm.width;
+                        ctx.lineCap = 'round';
+                        ctx.stroke();
+                        // Head glow
+                        ctx.beginPath();
+                        ctx.arc(cm.x, cm.y, cm.width * 2.2, 0, Math.PI * 2);
+                        ctx.fillStyle = cm.color;
+                        ctx.shadowBlur = 12;
+                        ctx.shadowColor = cm.color;
+                        ctx.fill();
+                        ctx.restore();
+
+                        if (cm.x > W + 100 || cm.y > H + 100) {
+                            comets[i] = makeComet();
+                            comets[i].delay = Math.random() * 200 + 80;
+                        }
+                    });
+                } catch(e) { /* keep animation going even if one frame errors */ }
+
+                requestAnimationFrame(draw);
+            }
+            requestAnimationFrame(draw);
+
+            window.addEventListener('resize', () => {
+                stars.forEach(s => { s.x = Math.random() * W; s.y = Math.random() * H; });
+            });
+        } catch(e) { /* canvas not supported, skip silently */ }
+    })();
+    </script>
+</body>
+</html>

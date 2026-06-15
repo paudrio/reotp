@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAUDRONIX GT — Acceso</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/bear.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --p:  #8b5cf6;
+            --p2: #a78bfa;
+            --c:  #22d3ee;
+            --c2: #67e8f9;
+            --bg: #07051a;
+            --card-bg: rgba(10,7,28,0.92);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg);
+        }
+
+        /* BG */
+        .bg-layer { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+        {% if background_url %}
+        .bg-blur {
+            position: absolute; inset: -20px;
+            background: url('{{ background_url }}') center/cover no-repeat;
+            filter: blur(40px) brightness(0.5);
+            transform: scale(1.1);
+        }
+        .bg-main {
+            position: absolute; inset: 0;
+            background: url('{{ background_url }}') center/contain no-repeat;
+        }
+        {% endif %}
+        .bg-layer video {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            min-width: 100%; min-height: 100%; object-fit: cover;
+        }
+        {% if not background_url %}
+        .bg-gradient {
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse at 10% 50%, rgba(139,92,246,0.1) 0%, transparent 55%),
+                radial-gradient(ellipse at 90% 15%, rgba(34,211,238,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 90%, rgba(139,92,246,0.06) 0%, transparent 50%);
+            animation: bgPulse 10s ease-in-out infinite alternate;
+        }
+        @keyframes bgPulse { from{opacity:0.7;} to{opacity:1;} }
+        {% endif %}
+        .bg-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
+
+        /* GRID BG */
+        .grid-bg {
+            position: fixed; inset: 0; z-index: 1;
+            pointer-events: none; overflow: hidden; opacity: 0.06;
+        }
+        .grid-bg svg { width: 100%; height: 100%; }
+
+        /* PARTICLES */
+        .particles { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+        .particle {
+            position: absolute;
+            animation: float linear infinite; opacity: 0;
+        }
+        @keyframes float {
+            0%   { transform: translateY(110vh) scale(0) rotate(0deg); opacity: 0; }
+            5%   { opacity: 0.8; }
+            95%  { opacity: 0.15; }
+            100% { transform: translateY(-10vh) scale(1) rotate(360deg); opacity: 0; }
+        }
+
+        /* CARD */
+        .card-wrapper {
+            position: relative; z-index: 10;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 0;
+            animation: cardEntry 0.9s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        @keyframes cardEntry {
+            from { opacity: 0; transform: translateY(40px) scale(0.94); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* BEAR WRAP */
+        .bear-login-outer {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .bear-glow-ring {
+            width: 140px; height: 4px;
+            background: linear-gradient(90deg, transparent, var(--p), var(--c), var(--p), transparent);
+            border-radius: 2px;
+            animation: ringGlow 2.6s ease-in-out infinite;
+            opacity: 0.6;
+        }
+        @keyframes ringGlow { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+        @media (max-width: 680px) { .bear-login-outer { display: none; } }
+
+        /* LOGIN CARD */
+        .login-card {
+            width: 400px;
+            background: var(--card-bg);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-radius: 26px;
+            border: 1px solid rgba(139,92,246,0.2);
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.04),
+                0 40px 100px rgba(0,0,0,0.7),
+                0 0 80px rgba(139,92,246,0.07),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+            overflow: hidden;
+            padding: 0 0 34px;
+            position: relative;
+        }
+
+        .scan-line {
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--p), var(--c), transparent);
+            animation: scan 3.5s linear infinite;
+            border-radius: 26px 26px 0 0;
+        }
+        @keyframes scan { from{transform:translateX(-100%);} to{transform:translateX(100%);} }
+
+        .corner {
+            position: absolute; width: 20px; height: 20px;
+            border-color: var(--p); border-style: solid; opacity: 0.4;
+        }
+        .corner-tl { top:10px;left:10px;border-width:2px 0 0 2px;border-radius:4px 0 0 0; }
+        .corner-tr { top:10px;right:10px;border-width:2px 2px 0 0;border-radius:0 4px 0 0; }
+        .corner-bl { bottom:10px;left:10px;border-width:0 0 2px 2px;border-radius:0 0 0 4px; }
+        .corner-br { bottom:10px;right:10px;border-width:0 2px 2px 0;border-radius:0 0 4px 0; }
+
+        /* HEADER */
+        .card-header {
+            text-align: center;
+            padding: 36px 28px 16px;
+        }
+
+        /* Inline mini mascot inside card for mobile */
+        .mini-mascot {
+            display: none;
+            margin: 0 auto 14px;
+        }
+        .mini-mascot svg { filter: drop-shadow(0 0 10px rgba(167,139,250,0.7)); animation: mascotFloat 2.4s ease-in-out infinite; }
+        @media (max-width: 680px) { .mini-mascot { display: block; } }
+
+        .brand {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.45rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg, #ffffff, var(--p2), var(--c2), #ffffff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s linear infinite;
+        }
+        @keyframes shimmer { from{background-position:0% center;} to{background-position:200% center;} }
+
+        .brand-sub {
+            color: rgba(255,255,255,0.28);
+            font-size: 0.68rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .status-dot {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(139,92,246,0.1);
+            border: 1px solid rgba(139,92,246,0.22);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.62rem;
+            color: var(--p2);
+            letter-spacing: 2px;
+            margin-top: 12px;
+        }
+        .dot-blink {
+            width: 6px; height: 6px;
+            background: var(--c);
+            border-radius: 50%;
+            animation: blink 1.2s ease-in-out infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1;box-shadow:0 0 6px var(--c);} 50%{opacity:0.3;box-shadow:none;} }
+
+        /* TABS */
+        .tabs {
+            display: flex; margin: 8px 28px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 13px; padding: 4px; gap: 4px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .tab {
+            flex: 1; padding: 10px; text-align: center;
+            cursor: pointer; font-weight: 700; font-size: 0.78rem;
+            letter-spacing: 2px; color: rgba(255,255,255,0.3);
+            border-radius: 9px; transition: all 0.3s; user-select: none;
+            font-family: 'Orbitron', monospace;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.1));
+            color: var(--p2);
+            box-shadow: 0 0 20px rgba(139,92,246,0.15);
+            border: 1px solid rgba(139,92,246,0.22);
+        }
+        .tab:hover:not(.active) { color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.05); }
+
+        /* FORM */
+        .form-wrap { padding: 22px 28px 0; }
+        .form-container { display: none; animation: fadeSlide 0.4s ease; }
+        .form-container.active { display: block; }
+        @keyframes fadeSlide { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+
+        .form-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.88rem; font-weight: 700;
+            letter-spacing: 3px; text-align: center;
+            margin-bottom: 18px; color: var(--p2);
+        }
+        #admin-form .form-title { color: #fbbf24; }
+
+        .input-group { position: relative; margin-bottom: 13px; }
+        .input-group input {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #fff; padding: 13px 16px 13px 44px;
+            border-radius: 11px; font-size: 0.92rem;
+            font-family: 'Inter', sans-serif;
+            outline: none; transition: all 0.3s;
+        }
+        .input-group input::placeholder { color: rgba(255,255,255,0.22); }
+        .input-group input:focus {
+            border-color: rgba(139,92,246,0.5);
+            background: rgba(139,92,246,0.05);
+            box-shadow: 0 0 22px rgba(139,92,246,0.12), inset 0 0 10px rgba(139,92,246,0.04);
+        }
+        #admin-form .input-group input:focus {
+            border-color: rgba(251,191,36,0.4);
+            background: rgba(251,191,36,0.04);
+            box-shadow: 0 0 20px rgba(251,191,36,0.1);
+        }
+        .input-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%); font-size: 15px;
+            opacity: 0.35; pointer-events: none;
+        }
+
+        .btn {
+            width: 100%; padding: 14px; border: none;
+            border-radius: 11px; font-weight: 900;
+            font-size: 0.82rem; letter-spacing: 3px;
+            cursor: pointer; margin-top: 4px;
+            transition: all 0.3s; font-family: 'Orbitron', monospace;
+            position: relative; overflow: hidden;
+        }
+        .btn::before {
+            content:''; position:absolute; top:0; left:-100%;
+            width:100%; height:100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before { left:100%; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:active { transform: translateY(0) scale(0.98); }
+
+        .btn-user {
+            background: linear-gradient(135deg, #6d28d9, var(--p), var(--p2));
+            color: #fff;
+            box-shadow: 0 6px 28px rgba(139,92,246,0.45);
+        }
+        .btn-user:hover { box-shadow: 0 10px 42px rgba(139,92,246,0.65); }
+
+        .btn-admin {
+            background: linear-gradient(135deg, #b45309, #fbbf24, #fde68a);
+            color: #000;
+            box-shadow: 0 6px 28px rgba(251,191,36,0.35);
+        }
+        .btn-admin:hover { box-shadow: 0 10px 42px rgba(251,191,36,0.55); }
+
+        .error-msg {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.25);
+            color: #fca5a5; padding: 10px 14px;
+            border-radius: 10px; font-size: 0.8rem;
+            margin-bottom: 14px; text-align: center;
+            animation: shake 0.4s ease;
+        }
+        @keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-5px);} 40%{transform:translateX(5px);} 60%{transform:translateX(-3px);} 80%{transform:translateX(3px);} }
+
+        .footer-note {
+            text-align: center;
+            color: rgba(255,255,255,0.1);
+            font-size: 0.62rem; letter-spacing: 3px;
+            margin-top: 20px; text-transform: uppercase;
+        }
+
+        @media (max-width: 520px) {
+            body { align-items: flex-start; padding: 20px 0 40px; }
+            .login-card { width: calc(100vw - 24px); border-radius: 20px; }
+            .card-header { padding: 26px 18px 14px; }
+            .brand { font-size: 1.1rem; letter-spacing: 2px; }
+            .tabs { margin: 6px 16px 0; }
+            .form-wrap { padding: 18px 16px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-layer">
+        {% if background_url and background_url.lower().endswith(('.mp4','.webm','.mov')) %}
+        <video autoplay muted loop playsinline>
+            <source src="{{ background_url }}" type="video/{{ background_url.split('.')[-1] }}">
+        </video>
+        {% elif background_url %}
+        <div class="bg-blur"></div>
+        <div class="bg-main"></div>
+        {% else %}
+        <div class="bg-gradient"></div>
+        {% endif %}
+        <div class="bg-overlay"></div>
+    </div>
+
+    <!-- GRID BACKGROUND -->
+    <div class="grid-bg">
+        <svg xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M40 0 L0 0 L0 40" fill="none" stroke="#8b5cf6" stroke-width="0.6"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)"/>
+        </svg>
+    </div>
+
+    <div class="particles" id="particles"></div>
+
+    <div class="card-wrapper">
+
+        <!-- OSO ARRIBA DEL CARD -->
+        <div id="bear-above-card"></div>
+
+        <!-- CARD -->
+        <div class="login-card">
+            <div class="scan-line"></div>
+            <div class="corner corner-tl"></div>
+            <div class="corner corner-tr"></div>
+            <div class="corner corner-bl"></div>
+            <div class="corner corner-br"></div>
+
+            <div class="card-header">
+                <div class="brand">PAUDRONIX GT</div>
+                <div class="brand-sub">Sistema de OTP</div>
+                <div class="status-dot">
+                    <div class="dot-blink"></div>
+                    SISTEMA ACTIVO
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" id="tab-user" onclick="showForm('user',this)">USUARIO</div>
+                <div class="tab" id="tab-admin" onclick="showForm('admin',this)">ADMIN</div>
+            </div>
+
+            <div class="form-wrap">
+                {% if error %}
+                <div class="error-msg" style="margin-top:14px">⚠ {{ error }}</div>
+                {% endif %}
+
+                <div id="user-form" class="form-container active">
+                    <div class="form-title" style="margin-top:18px">INGRESO USUARIO</div>
+                    <form action="/user_login" method="POST">
+                        <div class="input-group">
+                            <span class="input-icon">👤</span>
+                            <input type="text" name="username" placeholder="Usuario" required autocomplete="username">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" name="password" placeholder="Contraseña" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-user">ENTRAR</button>
+                    </form>
+                </div>
+
+                <div id="admin-form" class="form-container">
+                    <div class="form-title" style="margin-top:18px">INGRESO ADMIN</div>
+                    <form action="/login" method="POST">
+                        <div class="input-group">
+                            <span class="input-icon">👤</span>
+                            <input type="text" name="username" placeholder="Usuario" required autocomplete="username">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" name="password" placeholder="Contraseña" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-admin">ACCEDER</button>
+                    </form>
+                </div>
+
+                <div class="footer-note">OTP Monitor &nbsp;•&nbsp; Acceso Seguro</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/bear.js"></script>
+    <script>
+        function showForm(type, el) {
+            document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(type + '-form').classList.add('active');
+            el.classList.add('active');
+        }
+
+        // Particles
+        const container = document.getElementById('particles');
+        const colors = ['#8b5cf6','#a78bfa','#22d3ee','#67e8f9','#c4b5fd'];
+        for (let i = 0; i < 70; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 4 + 2;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const shapes = ['50%','0%','20%'];
+            p.style.cssText = `
+                left:${Math.random()*100}%;
+                width:${size}px;height:${size}px;
+                background:${color};
+                border-radius:${shapes[Math.floor(Math.random()*shapes.length)]};
+                box-shadow:0 0 ${size*5}px ${color};
+                animation-duration:${Math.random()*12+7}s;
+                animation-delay:${Math.random()*8}s;
+            `;
+            container.appendChild(p);
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('tab') === 'admin') showForm('admin', document.getElementById('tab-admin'));
+        {% if tab == 'admin' %}
+        showForm('admin', document.getElementById('tab-admin'));
+        {% endif %}
+    </script>
+</body>
+</html>

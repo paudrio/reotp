@@ -1,0 +1,143 @@
+/* ══ PIXEL BEAR ══ */
+
+/* ── MODO LOGIN: arriba del card, centrado ── */
+#bear-above-card {
+    position: relative;
+    width: 280px;
+    height: 100px;        /* altura fija — nunca mueve el card */
+    margin-bottom: 10px;
+}
+
+#bear-wrap-login {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: pointer;
+    user-select: none;
+}
+
+#bear-head-clip-login {
+    width: 62px;
+    height: 50px;
+    overflow: hidden;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 4px 16px rgba(139,92,246,0.6));
+    animation: bearFloat 3s ease-in-out infinite;
+    display: block;
+}
+
+/* ── MODO PANEL: esquina superior derecha ── */
+#bear-wrap-panel {
+    position: fixed;
+    top: 0;
+    right: 24px;
+    z-index: 1000;
+    cursor: pointer;
+    user-select: none;
+}
+
+#bear-head-clip-panel {
+    width: 70px;
+    height: 54px;
+    overflow: hidden;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 4px 16px rgba(139,92,246,0.6));
+    animation: bearFloat 3s ease-in-out infinite;
+}
+
+/* ── SVG ── */
+@keyframes bearFloat {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-5px); }
+}
+.bear-svg { display: block; overflow: visible; }
+
+/* ── BLINK ── */
+.bear-eye-l, .bear-eye-r {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: bearBlink 5s ease-in-out infinite;
+}
+.bear-eye-r { animation-delay: 0.09s; }
+@keyframes bearBlink {
+    0%,83%,100% { transform: scaleY(1); }
+    85%          { transform: scaleY(0.05); }
+    87%          { transform: scaleY(1); }
+}
+
+/* ── BUBBLE LOGIN: posición absoluta — no mueve nada ── */
+.bear-bubble-login {
+    display: none;
+    position: absolute;
+    bottom: 58px;         /* justo encima de la cabeza del oso */
+    left: 0; right: 0;
+    margin: 0 auto;
+    width: fit-content;
+    background: rgba(14,9,36,0.97);
+    border: 2px solid rgba(167,139,250,0.55);
+    border-radius: 8px;
+    padding: 7px 13px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #ddd0ff;
+    text-align: center;
+    box-shadow: 0 4px 18px rgba(139,92,246,0.38);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 20;
+    animation: bubbleIn 0.22s cubic-bezier(0.22,1,0.36,1) both;
+}
+/* Flechita apuntando ABAJO (hacia el oso) */
+.bear-bubble-login::after {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 0; right: 0;
+    margin: 0 auto;
+    width: 0;
+    border: 8px solid transparent;
+    border-top-color: rgba(167,139,250,0.55);
+    border-bottom: none;
+}
+
+/* ── BUBBLE PANEL ── */
+.bear-bubble-panel {
+    display: none;
+    position: absolute;
+    top: 58px;
+    right: 0;
+    background: rgba(14,9,36,0.97);
+    border: 2px solid rgba(167,139,250,0.55);
+    border-radius: 8px 0 8px 8px;
+    padding: 7px 13px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #ddd0ff;
+    white-space: nowrap;
+    box-shadow: 0 4px 18px rgba(139,92,246,0.38);
+    pointer-events: none;
+    z-index: 1001;
+    animation: bubbleIn 0.22s cubic-bezier(0.22,1,0.36,1) both;
+}
+.bear-bubble-panel::before {
+    content: '';
+    position: absolute;
+    top: -10px; right: 14px;
+    border: 8px solid transparent;
+    border-bottom-color: rgba(167,139,250,0.55);
+    border-top: none;
+}
+
+@keyframes bubbleIn {
+    from { opacity:0; transform:scale(0.75) translateY(-6px); }
+    to   { opacity:1; transform:scale(1)    translateY(0); }
+}
+.bubble-fade {
+    animation: bubbleFade 0.22s ease forwards !important;
+}
+@keyframes bubbleFade {
+    to { opacity:0; transform:scale(0.8) translateY(-4px); }
+}
